@@ -20,4 +20,8 @@ public class MainMenuService {
         repository.findAll().forEach(mainMenu -> items.add(mainMenu.getItem()));
         return items;
     }
+
+    public int getMenuIdByItem(String item) {
+        return repository.getByItem(item).getId();
+    }
 }
