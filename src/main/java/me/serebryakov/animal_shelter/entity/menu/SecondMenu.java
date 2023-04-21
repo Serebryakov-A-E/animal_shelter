@@ -1,12 +1,14 @@
 package me.serebryakov.animal_shelter.entity.menu;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "second_menu")
+@Data
 public class SecondMenu {
     @Id
     @Column(name = "second_menu_id")
@@ -17,7 +19,7 @@ public class SecondMenu {
 
     @ManyToOne()
     @JoinColumn(name = "main_menu_id", referencedColumnName = "main_menu_id")
-    private MainMenu mainMenu;
+    private MainMenu mainMenuId;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "secondMenu")
     private Set<Info> infoSet = new HashSet<>();

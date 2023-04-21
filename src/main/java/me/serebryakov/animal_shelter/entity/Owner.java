@@ -16,6 +16,9 @@ public class Owner {
     @Column(name = "owner_id")
     private long id;
 
+    @Column(name = "chat_id")
+    private long chatId;
+
     @OneToOne
     @JoinColumn(name = "animal_id", referencedColumnName = "animal_id")
     private Animal animal;
