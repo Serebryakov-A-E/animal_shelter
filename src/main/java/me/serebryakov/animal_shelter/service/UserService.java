@@ -34,4 +34,10 @@ public class UserService {
         user.setLastMenuLevel(menuLevel);
         repository.save(user);
     }
+
+    public void updateLastInfoId(long chatId, int lastInfoId) {
+        User user = repository.findByChatId(chatId);
+        user.setLastInfoId(lastInfoId);
+        repository.save(user);
+    }
 }

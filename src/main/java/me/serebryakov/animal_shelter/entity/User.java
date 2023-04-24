@@ -19,6 +19,9 @@ public class User {
     @Column(name = "last_menu_level")
     private int lastMenuLevel;
 
+    @Column(name = "last_info_id")
+    private int lastInfoId;
+
     @Column(name = "shelter_id")
     private int shelterId;
 }
