@@ -13,10 +13,12 @@ public class Report {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @Column(name = "chat_id")
+    private long chatId;
+
     @Column(name = "text")
     private String text;
 
-    public Report(String text) {
-        this.text = text;
-    }
+    @Column(name = "picture_id")
+    private String picture;
 }
