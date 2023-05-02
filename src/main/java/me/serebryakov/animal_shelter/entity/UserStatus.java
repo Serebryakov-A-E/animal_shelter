@@ -7,8 +7,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Data
 @NoArgsConstructor
-@Table(name = "reports")
-public class Report {
+@Table(name = "user_info")
+public class UserStatus {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -16,9 +16,12 @@ public class Report {
     @Column(name = "chat_id")
     private long chatId;
 
-    @Column(name = "text")
-    private String text;
+    @Column(name = "last_menu_level")
+    private int lastMenuLevel;
 
-    @Column(name = "picture_id")
-    private String picture;
+    @Column(name = "last_info_id")
+    private int lastInfoId;
+
+    @Column(name = "shelter_id")
+    private int shelterId;
 }

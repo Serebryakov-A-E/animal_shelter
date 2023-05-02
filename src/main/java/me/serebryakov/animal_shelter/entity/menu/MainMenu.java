@@ -17,6 +17,6 @@ public class MainMenu {
     @Column(name = "menu_item")
     private String item;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "mainMenu")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "mainMenuId")
     private Set<SecondMenu> secondMenuSet = new HashSet<>();
 }
