@@ -85,9 +85,8 @@ public class TelegramKeyboard {
         //будет что-то типа userService.updateMenuLevel(user chatId, menuLevel);
         userService.updateMenuLevel(chatId, 1);
         //выходим из метода, отправляем сообщение
-        return new SendMessage(chatId, "Привет, похоже, что ты первый раз здесь. Выбери приют который тебя интересует!")
+        return new SendMessage(chatId, "Выбери приют который тебя интересует!")
                 .replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
-
         //если уровень меню 1, то запоминаем какой приют выбрал юзер
     }
 
@@ -125,7 +124,6 @@ public class TelegramKeyboard {
         userService.updateMenuLevel(chatId, 3);
         return new SendMessage(chatId, getInfo(text, shelterId)).replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
     }
-
 
 
     private String[] getMainMenu() {
