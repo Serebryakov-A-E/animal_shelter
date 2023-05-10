@@ -28,6 +28,9 @@ public class TelegramKeyboard {
         //код создания пользователя, если такого ещё нет
         if (userService.getUserByChatId(chatId) == null) {
             userService.create(chatId);
+            userService.updateMenuLevel(chatId, 0);
+            //если пользователь сдесь первый раз, то выкидываем метод с особым приветствием!
+            return getZeroLevelMenuByFirstTime(chatId);
         }
         if (text.equals("/start")) {
             userService.updateMenuLevel(chatId, 0);
@@ -80,6 +83,18 @@ public class TelegramKeyboard {
     }
 
     private SendMessage getZeroLevelMenu(long chatId) {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(getMainMenu());
+        //сохраняем уровень меню
+        //будет что-то типа userService.updateMenuLevel(user chatId, menuLevel);
+        userService.updateMenuLevel(chatId, 1);
+        //выходим из метода, отправляем сообщение
+        return new SendMessage(chatId, "Выбери приют который тебя интересует!")
+                .replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
+
+        //если уровень меню 1, то запоминаем какой приют выбрал юзер
+    }
+
+    private SendMessage getZeroLevelMenuByFirstTime(long chatId) {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(getMainMenu());
         //сохраняем уровень меню
         //будет что-то типа userService.updateMenuLevel(user chatId, menuLevel);
