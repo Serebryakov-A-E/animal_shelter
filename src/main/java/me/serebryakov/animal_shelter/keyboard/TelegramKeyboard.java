@@ -1,7 +1,12 @@
 package me.serebryakov.animal_shelter.keyboard;
 
+import com.pengrad.telegrambot.model.Contact;
+import com.pengrad.telegrambot.model.Message;
+import com.pengrad.telegrambot.model.request.KeyboardButton;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendMessage;
+import me.serebryakov.animal_shelter.entity.Owner;
+import me.serebryakov.animal_shelter.service.OwnerService;
 import me.serebryakov.animal_shelter.service.UserService;
 import me.serebryakov.animal_shelter.service.menuService.InfoService;
 import me.serebryakov.animal_shelter.service.menuService.MainMenuService;
@@ -17,14 +22,22 @@ public class TelegramKeyboard {
     private final InfoService infoService;
     private final UserService userService;
 
-    public TelegramKeyboard(MainMenuService mainMenuService, SecondMenuService secondMenuService, InfoService infoService, UserService userService) {
+    private final OwnerService ownerService;
+
+    public TelegramKeyboard(MainMenuService mainMenuService, SecondMenuService secondMenuService, InfoService infoService, UserService userService, OwnerService ownerService) {
         this.mainMenuService = mainMenuService;
         this.secondMenuService = secondMenuService;
         this.infoService = infoService;
         this.userService = userService;
+        this.ownerService = ownerService;
     }
 
-    public SendMessage getResponse(Long chatId, String text) {
+    public SendMessage getResponse(Message message) {
+        Long chatId = message.chat().id();
+        String text = message.text();
+        Contact contact = message.contact();
+
+
         //код создания пользователя, если такого ещё нет
         if (userService.getUserByChatId(chatId) == null) {
             userService.create(chatId);
@@ -32,8 +45,16 @@ public class TelegramKeyboard {
             //если пользователь сдесь первый раз, то выкидываем метод с особым приветствием!
             return getZeroLevelMenuByFirstTime(chatId);
         }
-        if (text.equals("/start")) {
+        //Также вносим в базу овнера если его ещё нет
+        if (ownerService.getByChatId(chatId) == null) {
+            ownerService.create(chatId);
+        }
+        if (("/start").equals(text)) {
             userService.updateMenuLevel(chatId, 0);
+        }
+        //если пришло пустое сообщение, проверям пришли ли контакты пользователя
+        if (message.text() == null && message.contact() != null) {
+            return saveContacts(chatId, contact);
         }
 
         //создаем переменную для id приюта
@@ -113,6 +134,11 @@ public class TelegramKeyboard {
         //Предлагаем выбрать пункт из меню второго уровня
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(getSecondMenu(shelterId));
         //сохраняем уровнь меню
+
+        //кнопка контактных данных
+        KeyboardButton keyboardButton = new KeyboardButton("Оставить контактные данные").requestContact(true);
+        replyKeyboardMarkup.addRow(keyboardButton);
+
         userService.updateMenuLevel(chatId, 2);
         //отправляем сообщение и выходим из метода
         return new SendMessage(chatId, "Что тебя интересует?").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
@@ -128,6 +154,7 @@ public class TelegramKeyboard {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(getInfoMenu(shelterId, infoId));
         //обновляем уровень меню
         userService.updateMenuLevel(chatId, 3);
+
         //отправляем менюшку и выходим из метода
         return new SendMessage(chatId, "Выбери нужный раздел информации.").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
     }
@@ -139,6 +166,11 @@ public class TelegramKeyboard {
         //отправляем на шаг назад
         userService.updateMenuLevel(chatId, 3);
         return new SendMessage(chatId, getInfo(text, shelterId)).replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
+    }
+
+    private SendMessage saveContacts(long chatId, Contact contact) {
+        ownerService.saveContacts(chatId, contact);
+        return new SendMessage(chatId, "Контактные данные успешно сохранены!");
     }
 
 

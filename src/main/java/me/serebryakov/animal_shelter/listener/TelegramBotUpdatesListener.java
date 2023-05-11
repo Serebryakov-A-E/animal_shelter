@@ -2,10 +2,13 @@ package me.serebryakov.animal_shelter.listener;
 
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
+import com.pengrad.telegrambot.model.Contact;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.Keyboard;
+import com.pengrad.telegrambot.model.request.KeyboardButton;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
+import com.pengrad.telegrambot.request.SendContact;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.SendResponse;
 import jakarta.annotation.PostConstruct;
@@ -49,41 +52,35 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         try {
             list.forEach(update -> {
                 logger.info("handles update: {}", update);
-
                 Message message = update.message();
-                Long chatId = message.chat().id();
-                String text = message.text();
+                /*
+                Contact contact = message.contact();
+                if (("/start").equals(message.text())) {
+                    {
+                        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup("");
+                        SendMessage sendMessage = new SendMessage(chatId, "sss").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
+                        KeyboardButton keyboardButton = new KeyboardButton("CONTACTS").requestContact(true);
+                        replyKeyboardMarkup.addRow(keyboardButton);
+
+                        SendResponse sendResponse = telegramBot.execute(sendMessage);
+                        if (!sendResponse.isOk()) {
+                            logger.error("Error sending message: {}", sendResponse.description());
+                        }
+                    }
+                } else if (message.text() == null && message.contact() != null) {
+                    System.out.println(contact.phoneNumber());
+                }
 
 
+                //SendResponse sendResponse = telegramBot.execute(sendContact);
 
-                SendMessage sendMessage = telegramKeyboard.getResponse(chatId, text);
 
+                 */
+                SendMessage sendMessage = telegramKeyboard.getResponse(message);
                 SendResponse sendResponse = telegramBot.execute(sendMessage);
                 if (!sendResponse.isOk()) {
                     logger.error("Error sending message: {}", sendResponse.description());
                 }
-
-                /*
-                if ("/start".equals(text)) {
-                    ReplyKeyboardMarkup replyKeyboardMarkup = telegramKeyboard.getReplyKeyboardMarkup(1);
-                    SendMessage sendMessage = new SendMessage(chatId, "Привет. Это телеграмм бот приюта." +
-                            "Выбери один из пунктов меню.").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
-                    SendResponse sendResponse = telegramBot.execute(sendMessage);
-                    if (!sendResponse.isOk()) {
-                        logger.error("Error sending message: {}", sendResponse.description());
-                    }
-
-                    String item = message.text();
-                    ReplyKeyboardMarkup replyKeyboardMarkup1 = telegramKeyboard.getReplyKeyboardMarkup(2, item);
-                    SendMessage sendMessage1 = new SendMessage(chatId, "Выбери пунк меню для своего приюта.")
-                            .replyMarkup(replyKeyboardMarkup1.resizeKeyboard(true));
-                    SendResponse sendResponse1 = telegramBot.execute(sendMessage1);
-
-                    if (!sendResponse1.isOk()) {
-                        logger.error("Error sending message: {}", sendResponse1.description());
-                    }
-                }
-                */
             });
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
