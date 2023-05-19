@@ -13,7 +13,6 @@ import me.serebryakov.animal_shelter.service.OwnerService;
 import me.serebryakov.animal_shelter.service.ReportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.task.support.ExecutorServiceAdapter;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -63,7 +62,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             }
 
         });
-        executorService.shutdown();
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
 }

@@ -5,7 +5,9 @@ import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.request.KeyboardButton;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendMessage;
-import me.serebryakov.animal_shelter.entity.Owner;
+import me.serebryakov.animal_shelter.entity.Animal;
+import me.serebryakov.animal_shelter.entity.AnimalType;
+import me.serebryakov.animal_shelter.service.AnimalService;
 import me.serebryakov.animal_shelter.service.OwnerService;
 import me.serebryakov.animal_shelter.service.UserService;
 import me.serebryakov.animal_shelter.service.menuService.InfoService;
@@ -21,22 +23,22 @@ public class TelegramKeyboard {
     private final SecondMenuService secondMenuService;
     private final InfoService infoService;
     private final UserService userService;
-
     private final OwnerService ownerService;
+    private final AnimalService animalService;
 
-    public TelegramKeyboard(MainMenuService mainMenuService, SecondMenuService secondMenuService, InfoService infoService, UserService userService, OwnerService ownerService) {
+    public TelegramKeyboard(MainMenuService mainMenuService, SecondMenuService secondMenuService, InfoService infoService, UserService userService, OwnerService ownerService, AnimalService animalService) {
         this.mainMenuService = mainMenuService;
         this.secondMenuService = secondMenuService;
         this.infoService = infoService;
         this.userService = userService;
         this.ownerService = ownerService;
+        this.animalService = animalService;
     }
 
     public SendMessage getResponse(Message message) {
         Long chatId = message.chat().id();
         String text = message.text();
         Contact contact = message.contact();
-
 
         //код создания пользователя, если такого ещё нет
         if (userService.getUserByChatId(chatId) == null) {
