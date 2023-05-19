@@ -34,9 +34,21 @@ public class OwnerService {
         return repository.findByChatId(chatId);
     }
 
+    /*
     public void updateAnimalById(long id, Animal animal) {
         Owner owner = repository.findById(id).orElseThrow(OwnerNotExistException::new);
         owner.setAnimal(animal);
+        save(owner);
+    }
+
+     */
+
+    public void addAnimalByChatId(long chatId, Animal animal) {
+        Owner owner = repository.findByChatId(chatId);
+        if (owner == null) {
+            throw new OwnerNotExistException();
+        }
+        owner.getAnimalList().add(animal);
         save(owner);
     }
 
