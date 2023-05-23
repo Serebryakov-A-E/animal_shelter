@@ -19,7 +19,11 @@ public class Animal {
     @Column(name = "animal_id")
     private long id;
 
-    @OneToOne
-    @JoinColumn(name = "owner_id", referencedColumnName = "owner_id")
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
     private Owner owner;
+
+    @Enumerated
+    @Column(name = "animal_type")
+    private AnimalType animalType;
 }

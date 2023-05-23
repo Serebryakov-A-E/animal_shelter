@@ -6,4 +6,5 @@ import org.springframework.stereotype.Component;
 
 @Component
 public interface OwnerRepository extends JpaRepository<Owner, Long> {
+    public Owner findByChatId(long chatId);
 }

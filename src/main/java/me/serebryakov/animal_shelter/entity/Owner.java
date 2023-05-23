@@ -5,6 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+/**
+ * Сущность хозяина животного или животных
+ */
 @Entity
 @Data
 @NoArgsConstructor
@@ -25,7 +30,6 @@ public class Owner {
     @Column(name = "phone")
     private String phoneNumber;
 
-    @OneToOne
-    @JoinColumn(name = "animal_id", referencedColumnName = "animal_id")
-    private Animal animal;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "owner", fetch = FetchType.EAGER)
+    private List<Animal> animalList = new ArrayList<>();
 }
