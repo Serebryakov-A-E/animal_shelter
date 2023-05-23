@@ -105,6 +105,11 @@ public class TelegramKeyboard {
         }
     }
 
+    /**
+     * Метод возвращает сообщение с меню из бд, для главного меню, где предлагается выбрать один из приютов.
+     * @param chatId
+     * @return
+     */
     private SendMessage getZeroLevelMenu(long chatId) {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(getMainMenu());
         //сохраняем уровень меню
@@ -129,6 +134,12 @@ public class TelegramKeyboard {
         //если уровень меню 1, то запоминаем какой приют выбрал юзер
     }
 
+    /**
+     * Метод возвращает сообщение с меню из бд, для первого уровня меню.
+     * @param chatId
+     * @param text
+     * @return
+     */
     private SendMessage getFirstLevelMenu(long chatId, String text) {
         //получаем Id приюта по тексту сообщения и обновляем его в бд юзера
         int shelterId = mainMenuService.getMenuIdByItem(text);
@@ -146,6 +157,12 @@ public class TelegramKeyboard {
         return new SendMessage(chatId, "Что тебя интересует?").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
     }
 
+    /**
+     * Метод возвращает сообщение с меню из бд, для второго уровня меню.
+     * @param chatId
+     * @param text
+     * @return
+     */
     private SendMessage getSecondLevelMenu(long chatId, String text) {
         //получаем id выбранной информации и id выбранного приюта из бд
         int shelterId = userService.getUserByChatId(chatId).getShelterId();
@@ -161,6 +178,12 @@ public class TelegramKeyboard {
         return new SendMessage(chatId, "Выбери нужный раздел информации.").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
     }
 
+    /**
+     * Метод возвращает сообщение с информацией для пользователя.
+     * @param chatId
+     * @param text
+     * @return
+     */
     private SendMessage getThirdLevelMenu(long chatId, String text) {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup("<- Назад");
         //получаем корректный shelter id
@@ -176,24 +199,44 @@ public class TelegramKeyboard {
     }
 
 
-
+    /**
+     * Метод возвращает массив строк, содержащий пункты главного меню. Выбор приюта.
+     * @return
+     */
     private String[] getMainMenu() {
         List<String> list = mainMenuService.getMenuItems();
         return list.toArray(String[]::new);
     }
 
+    /**
+     * Метод возвращает массив строк, содержащий пункты подменю.
+     * @return
+     */
     private String[] getSecondMenu(int shelterId) {
         List<String> list = secondMenuService.getMenuItemsByShelterId(shelterId);
+        list.add("Отправить отчёт");
         list.add("<- Назад");
         return list.toArray(String[]::new);
     }
 
+    /**
+     * Метод возвращает меню в котором пользователь может выбрать интересующую его информацию.
+     * @param shelterId
+     * @param infoId
+     * @return
+     */
     private String[] getInfoMenu(int shelterId, int infoId) {
         List<String> list = infoService.getMenuItems(shelterId, infoId);
         list.add("<- Назад");
         return list.toArray(String[]::new);
     }
 
+    /**
+     * Метод возвращает строку с информацией, выбранной пользователем.
+     * @param item
+     * @param shelterId
+     * @return
+     */
     private String getInfo(String item, int shelterId) {
         return infoService.getInfo(item, shelterId);
     }
