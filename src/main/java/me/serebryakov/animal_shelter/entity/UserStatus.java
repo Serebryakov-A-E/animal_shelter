@@ -24,4 +24,7 @@ public class UserStatus {
 
     @Column(name = "shelter_id")
     private int shelterId;
+
+    @Column(name = "sending_report_status")
+    private Boolean isSendingReport = false;
 }
