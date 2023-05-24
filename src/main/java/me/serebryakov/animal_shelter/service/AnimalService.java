@@ -1,10 +1,13 @@
 package me.serebryakov.animal_shelter.service;
 
 import me.serebryakov.animal_shelter.entity.Animal;
+import me.serebryakov.animal_shelter.entity.AnimalType;
 import me.serebryakov.animal_shelter.entity.Owner;
 import me.serebryakov.animal_shelter.exception.AnimalNotExistException;
 import me.serebryakov.animal_shelter.repository.AnimalRepository;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class AnimalService {
@@ -26,6 +29,14 @@ public class AnimalService {
         Animal animal = repository.findById(id).orElseThrow(AnimalNotExistException::new);
         animal.setOwner(owner);
         save(animal);
+    }
+
+    public List<Animal> getAnimalsByOwner(Owner owner) {
+        return repository.findAnimalsByOwner(owner);
+    }
+
+    public List<Animal> findAnimalsByOwnerAndAnimalType(Owner owner, AnimalType animalType) {
+        return repository.findAnimalsByOwnerAndAnimalType(owner, animalType);
     }
 
     public void delete(long id) {

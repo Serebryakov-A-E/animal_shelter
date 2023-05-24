@@ -52,6 +52,15 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     logger.info("handles update: {}", update);
                     Message message = update.message();
                     SendMessage sendMessage = telegramKeyboard.getResponse(message);
+
+                    /*
+                    if (message.photo() != null) {
+                        //вызываем этот метод, если пришло фото
+                        sendMessage = telegramKeyboard.getReportResponse(message, telegramBot);
+                    }
+
+                     */
+
                     SendResponse sendResponse = telegramBot.execute(sendMessage);
                     if (!sendResponse.isOk()) {
                         logger.error("Error sending message: {}", sendResponse.description());

@@ -29,6 +29,12 @@ public class UserService {
         repository.save(user);
     }
 
+    public void updateReportStatus(long chatId, boolean status) {
+        UserStatus user = repository.findByChatId(chatId);
+        user.setIsSendingReport(status);
+        repository.save(user);
+    }
+
     public void updateMenuLevel(long chatId, int menuLevel) {
         UserStatus user = repository.findByChatId(chatId);
         user.setLastMenuLevel(menuLevel);
