@@ -35,4 +35,12 @@ public class ReportService {
     public Report findByChatIdAndDate(long chatId, LocalDate date) {
         return repository.findReportByChatIdAndDate(chatId, date);
     }
+
+    public Report getById(long id) {
+        return repository.getReportById(id);
+    }
+
+    public List<Report> getReportsListByStatus(ReportStatus status) {
+        return repository.findReportsByReportStatus(status);
+    }
 }

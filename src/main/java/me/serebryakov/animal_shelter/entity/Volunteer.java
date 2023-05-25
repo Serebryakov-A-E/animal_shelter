@@ -19,5 +19,5 @@ public class Volunteer {
     private long chatId;
 
     @Column(name = "last_report_chat_id")
-    private long reportChatId = 0L;
+    private long reportId = 0L;
 }

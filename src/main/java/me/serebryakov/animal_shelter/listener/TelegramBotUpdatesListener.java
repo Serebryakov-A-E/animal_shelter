@@ -10,6 +10,7 @@ import com.pengrad.telegrambot.request.SendPhoto;
 import com.pengrad.telegrambot.response.SendResponse;
 import jakarta.annotation.PostConstruct;
 import me.serebryakov.animal_shelter.entity.Volunteer;
+import me.serebryakov.animal_shelter.entity.menu.ReportStatus;
 import me.serebryakov.animal_shelter.keyboard.TelegramKeyboard;
 import me.serebryakov.animal_shelter.service.VolunteerService;
 import org.slf4j.Logger;
@@ -61,16 +62,16 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                         } else if ("Получить отчёт на проверку".equals(text)) {
                             sendPhoto = telegramKeyboard.getUncheckedReports(chatId, telegramBot, volunteerService);
                             if (sendPhoto == null) {
-                                sendMessage = new SendMessage(chatId, "Сегодня ещё не было отчётов");
+                                sendMessage = new SendMessage(chatId, "Сегодня ещё не было отчётов").replyMarkup(new ReplyKeyboardMarkup("Главное меню"));
                             }
-                        } else if ("Отклоненные отчёты по дате".equals(text)) {
-
-                        } else if ("Одобренные отчёты по дате".equals(text)) {
-
-                        } else if ("Непровернные отчёты по дате".equals(text)) {
-
+                        } else if ("Список отклоненных отчётов".equals(text)) {
+                            sendMessage = getReportsList(chatId, ReportStatus.REJECTED);
+                        } else if ("Список одобреных отчётов".equals(text)) {
+                            sendMessage = getReportsList(chatId, ReportStatus.APPROVED);
+                        } else if ("Список непроверенных отчётов".equals(text)) {
+                            sendMessage = getReportsList(chatId, ReportStatus.UNCHECKED);
                         } else if ("Одобрить".equals(text) || "Отклонить".equals(text)) {
-                            sendMessage = telegramKeyboard.setReportStatus(chatId, text, volunteer.getReportChatId());
+                            sendMessage = telegramKeyboard.setReportStatus(chatId, text, volunteer.getReportId());
                         } else {
                             sendMessage = new SendMessage(chatId, "Неизвестная команда. Для начала работы введите /start");
                         }
@@ -100,10 +101,18 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
-    private SendMessage getVolunteerMenu(long chatId) {
-        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup("Получить отчёт на проверку", "Отклоненные отчёты по дате",
-                "Одобренные отчёты по дате", "Непровернные отчёты по дате");
-        return new SendMessage(chatId, "Выберите нужный пункт меню.").replyMarkup(replyKeyboardMarkup);
+
+    private SendMessage getReportsList(long chatId, ReportStatus status) {
+        SendMessage sendMessage = telegramKeyboard.getReportList(chatId, status);
+        if (sendMessage == null) {
+            sendMessage = new SendMessage(chatId, "Отчётов нет.").replyMarkup(new ReplyKeyboardMarkup("Главное меню"));
+        }
+        return sendMessage;
     }
 
+    private SendMessage getVolunteerMenu(long chatId) {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup("Получить отчёт на проверку", "Список отклоненных отчётов",
+                "Список одобреных отчётов", "Список непроверенных отчётов");
+        return new SendMessage(chatId, "Выберите нужный пункт меню.").replyMarkup(replyKeyboardMarkup);
+    }
 }

@@ -15,4 +15,8 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     List<Report> findReportsByDateAndReportStatus(LocalDate date, ReportStatus status);
 
     Report findReportByChatIdAndDate(long chatId, LocalDate date);
+
+    List<Report> findReportsByReportStatus(ReportStatus reportStatus);
+
+    Report getReportById(long id);
 }

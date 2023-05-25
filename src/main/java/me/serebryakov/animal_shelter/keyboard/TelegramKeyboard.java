@@ -17,7 +17,6 @@ import me.serebryakov.animal_shelter.service.menuService.InfoService;
 import me.serebryakov.animal_shelter.service.menuService.MainMenuService;
 import me.serebryakov.animal_shelter.service.menuService.SecondMenuService;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -364,11 +363,11 @@ public class TelegramKeyboard {
         Report report = reports.get(0);
         String reportText = report.getText();
         String fileId = report.getFileId();
-        long reportChatId = report.getChatId();
+        long reportId = report.getId();
 
         //устанавливаем волонтеру ид проверяемого отчёта
         Volunteer volunteer = volunteerService.getByChatId(chatId);
-        volunteer.setReportChatId(reportChatId);
+        volunteer.setReportId(reportId);
         volunteerService.save(volunteer);
 
         //устанавливаем статус "на проверке"
@@ -387,6 +386,32 @@ public class TelegramKeyboard {
         return sendPhoto;
     }
 
+    public SendMessage getReportList(long chatId, ReportStatus status) {
+        StringBuilder sb = new StringBuilder();
+        List<Report> reports = reportService.getReportsListByStatus(status);
+        if (reports.size() == 0) {
+            return null;
+        }
+
+        for (Report report : reports) {
+            Owner owner = ownerService.getByChatId(report.getChatId());
+            sb.append("id отчёта - ").append(report.getId()).append("\nДата отчёта: ").append(report.getDate()).append("\nТекст отчёта: ").append(report.getText());
+            String shelterInfo;
+            if (report.getShelterId() == 1) {
+                shelterInfo = "Кошачий";
+            } else if (report.getShelterId() == 2) {
+                shelterInfo = "Собачий";
+            } else {
+                shelterInfo = "Нет информации о приюте";
+            }
+            sb.append("\nИнформация о приюте: ").append(shelterInfo);
+            sb.append("\nКонтакты для связи: ").append(owner.getPhoneNumber()).append(" ").append(owner.getName());
+            sb.append("\n");
+            sb.append("\n");
+        }
+        return new SendMessage(chatId, sb.toString()).replyMarkup(new ReplyKeyboardMarkup("Главное меню"));
+    }
+
     private byte[] getFile(String fileId, TelegramBot telegramBot) {
         GetFileResponse getFileResponse = telegramBot.execute(new GetFile(fileId));
         if (getFileResponse.isOk()) {
@@ -399,10 +424,11 @@ public class TelegramKeyboard {
         return new byte[0];
     }
 
-    public SendMessage setReportStatus(long chatId, String status, long reportChatId) {
+    //todo поменять. на просто менять статус по репорт ид
+    public SendMessage setReportStatus(long chatId, String status, long reportId) {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup("Главное меню");
 
-        Report report = reportService.findByChatIdAndDate(reportChatId, LocalDate.now());
+        Report report = reportService.getById(reportId);
 
         //выкидываем, если вдруг такого отчёта нет
         if (report == null) {

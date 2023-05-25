@@ -12,18 +12,22 @@ import java.time.LocalTime;
 @Data
 @NoArgsConstructor
 @Table(name = "reports")
-@IdClass(ReportId.class)
+//@IdClass(ReportId.class)
 public class Report {
-
     @Id
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+
+    //@Id
     @Column(name = "chat_id")
     private long chatId;
 
-    @Id
+    //@Id
     @Column(name = "date")
     private LocalDate date;
 
-    @Id
+    //@Id
     @Column(name = "shelter_id")
     private int shelterId;
 
