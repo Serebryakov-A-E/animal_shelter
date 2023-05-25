@@ -1,23 +1,25 @@
 package me.serebryakov.animal_shelter.keyboard;
 
+import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Contact;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.PhotoSize;
 import com.pengrad.telegrambot.model.request.KeyboardButton;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
+import com.pengrad.telegrambot.request.GetFile;
 import com.pengrad.telegrambot.request.SendMessage;
-import me.serebryakov.animal_shelter.entity.Animal;
-import me.serebryakov.animal_shelter.entity.AnimalType;
-import me.serebryakov.animal_shelter.entity.Report;
-import me.serebryakov.animal_shelter.service.AnimalService;
-import me.serebryakov.animal_shelter.service.OwnerService;
-import me.serebryakov.animal_shelter.service.ReportService;
-import me.serebryakov.animal_shelter.service.UserService;
+import com.pengrad.telegrambot.request.SendPhoto;
+import com.pengrad.telegrambot.response.GetFileResponse;
+import me.serebryakov.animal_shelter.entity.*;
+import me.serebryakov.animal_shelter.entity.menu.ReportStatus;
+import me.serebryakov.animal_shelter.service.*;
 import me.serebryakov.animal_shelter.service.menuService.InfoService;
 import me.serebryakov.animal_shelter.service.menuService.MainMenuService;
 import me.serebryakov.animal_shelter.service.menuService.SecondMenuService;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -330,6 +332,7 @@ public class TelegramKeyboard {
         if (message.photo() != null) {
 
             PhotoSize photoSize = message.photo()[message.photo().length - 1];
+            //Сохраняем только fileId, чтобы не хранить фотографии локально. Они храняться на серверах телеграма.
             String fileId = photoSize.fileId();
 
             //проверяем есть ли уже фото
@@ -349,5 +352,71 @@ public class TelegramKeyboard {
         }
         userService.updateReportStatus(chatId, false);
         return new SendMessage(chatId, "ERROR");
+    }
+
+    //метод синхронизирован, чтобы два волонтера не могли получить на проверку одинаковый отчёт
+    public synchronized SendPhoto getUncheckedReports(long chatId, TelegramBot telegramBot, VolunteerService volunteerService) {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup("Одобрить", "Отклонить");
+        List<Report> reports = reportService.findReportsByDateAndStatus(LocalDate.now(), ReportStatus.UNCHECKED);
+        if (reports.size() == 0) {
+            return null;
+        }
+        Report report = reports.get(0);
+        String reportText = report.getText();
+        String fileId = report.getFileId();
+        long reportChatId = report.getChatId();
+
+        //устанавливаем волонтеру ид проверяемого отчёта
+        Volunteer volunteer = volunteerService.getByChatId(chatId);
+        volunteer.setReportChatId(reportChatId);
+        volunteerService.save(volunteer);
+
+        //устанавливаем статус "на проверке"
+        report.setReportStatus(ReportStatus.CHECKING);
+        reportService.save(report);
+
+        long ownerChatId = report.getChatId();
+        Owner owner = ownerService.getByChatId(ownerChatId);
+        //получаем байты фотки
+        byte[] image = getFile(fileId, telegramBot);
+
+        SendPhoto sendPhoto = new SendPhoto(chatId, image);
+        sendPhoto.caption(reportText + "\n" + "Контакты для связи с хозяином животного:" + "\n" + owner.getName() + "\n" + owner.getPhoneNumber());
+        sendPhoto.replyMarkup(replyKeyboardMarkup);
+
+        return sendPhoto;
+    }
+
+    private byte[] getFile(String fileId, TelegramBot telegramBot) {
+        GetFileResponse getFileResponse = telegramBot.execute(new GetFile(fileId));
+        if (getFileResponse.isOk()) {
+            try {
+                return telegramBot.getFileContent(getFileResponse.file());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return new byte[0];
+    }
+
+    public SendMessage setReportStatus(long chatId, String status, long reportChatId) {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup("Главное меню");
+
+        Report report = reportService.findByChatIdAndDate(reportChatId, LocalDate.now());
+
+        //выкидываем, если вдруг такого отчёта нет
+        if (report == null) {
+            return new SendMessage(chatId, "Ошибка установки статуса отчёта. Отчёта с таким Id нет.").replyMarkup(replyKeyboardMarkup);
+        }
+
+        if (status.equals("Одобрить")) {
+            report.setReportStatus(ReportStatus.APPROVED);
+            reportService.save(report);
+            return new SendMessage(chatId, "Спасибо за проверку. Статус отчёта обновлен на \"Одобрен\"").replyMarkup(replyKeyboardMarkup);
+        } else {
+            report.setReportStatus(ReportStatus.REJECTED);
+            reportService.save(report);
+            return new SendMessage(chatId, "Спасибо за проверку. Статус отчёта обновлен на \"Отклонен\". Свяжитесь с хозяином животного.").replyMarkup(replyKeyboardMarkup);
+        }
     }
 }

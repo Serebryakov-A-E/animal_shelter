@@ -3,6 +3,7 @@ package me.serebryakov.animal_shelter.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import me.serebryakov.animal_shelter.entity.menu.ReportStatus;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -34,4 +35,8 @@ public class Report {
 
     @Column(name = "file_id")
     private String fileId;
+
+    @Enumerated
+    @Column(name = "status")
+    private ReportStatus reportStatus = ReportStatus.UNCHECKED;
 }
