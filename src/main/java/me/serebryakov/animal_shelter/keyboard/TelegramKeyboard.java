@@ -350,4 +350,109 @@ public class TelegramKeyboard {
         userService.updateReportStatus(chatId, false);
         return new SendMessage(chatId, "ERROR");
     }
+
+    //метод синхронизирован, чтобы два волонтера не могли получить на проверку одинаковый отчёт
+    public synchronized SendPhoto getUncheckedReports(long chatId, TelegramBot telegramBot, VolunteerService volunteerService) {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup("Одобрить", "Отклонить");
+        List<Report> reports = reportService.findReportsByDateAndStatus(LocalDate.now(), ReportStatus.UNCHECKED);
+        if (reports.size() == 0) {
+            return null;
+        }
+        Report report = reports.get(0);
+        String reportText = report.getText();
+        String fileId = report.getFileId();
+        long reportId = report.getId();
+
+        //устанавливаем волонтеру ид проверяемого отчёта
+        Volunteer volunteer = volunteerService.getByChatId(chatId);
+        volunteer.setReportId(reportId);
+        volunteerService.save(volunteer);
+
+        //устанавливаем статус "на проверке"
+        report.setReportStatus(ReportStatus.CHECKING);
+        reportService.save(report);
+
+        long ownerChatId = report.getChatId();
+        Owner owner = ownerService.getByChatId(ownerChatId);
+        //получаем байты фотки
+        byte[] image = getFile(fileId, telegramBot);
+
+        SendPhoto sendPhoto = new SendPhoto(chatId, image);
+        sendPhoto.caption(reportText + "\n" + "Контакты для связи с хозяином животного:" + "\n" + owner.getName() + "\n" + owner.getPhoneNumber());
+        sendPhoto.replyMarkup(replyKeyboardMarkup);
+
+        return sendPhoto;
+    }
+
+    public SendMessage getReportList(long chatId, ReportStatus status) {
+        StringBuilder sb = new StringBuilder();
+        List<Report> reports = reportService.getReportsListByStatus(status);
+        if (reports.size() == 0) {
+            return null;
+        }
+
+        for (Report report : reports) {
+            Owner owner = ownerService.getByChatId(report.getChatId());
+            sb.append("id отчёта - ").append(report.getId()).append("\nДата отчёта: ").append(report.getDate()).append("\nТекст отчёта: ").append(report.getText());
+            String shelterInfo;
+            if (report.getShelterId() == 1) {
+                shelterInfo = "Кошачий";
+            } else if (report.getShelterId() == 2) {
+                shelterInfo = "Собачий";
+            } else {
+                shelterInfo = "Нет информации о приюте";
+            }
+            sb.append("\nИнформация о приюте: ").append(shelterInfo);
+            sb.append("\nКонтакты для связи: ").append(owner.getPhoneNumber()).append(" ").append(owner.getName());
+            sb.append("\n");
+            sb.append("\n");
+        }
+        return new SendMessage(chatId, sb.toString()).replyMarkup(new ReplyKeyboardMarkup("Главное меню"));
+    }
+
+    private byte[] getFile(String fileId, TelegramBot telegramBot) {
+        GetFileResponse getFileResponse = telegramBot.execute(new GetFile(fileId));
+        if (getFileResponse.isOk()) {
+            try {
+                return telegramBot.getFileContent(getFileResponse.file());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return new byte[0];
+    }
+
+    //todo поменять. на просто менять статус по репорт ид
+    public SendMessage setReportStatus(long chatId, String status, long reportId) {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup("Главное меню");
+
+        Report report = reportService.getById(reportId);
+
+        //выкидываем, если вдруг такого отчёта нет
+        if (report == null) {
+            return new SendMessage(chatId, "Ошибка установки статуса отчёта. Отчёта с таким Id нет.").replyMarkup(replyKeyboardMarkup);
+        }
+
+        if (status.equals("Одобрить")) {
+            report.setReportStatus(ReportStatus.APPROVED);
+            reportService.save(report);
+            return new SendMessage(chatId, "Спасибо за проверку. Статус отчёта обновлен на \"Одобрен\"").replyMarkup(replyKeyboardMarkup);
+        } else {
+            report.setReportStatus(ReportStatus.REJECTED);
+            reportService.save(report);
+            return new SendMessage(chatId, "Спасибо за проверку. Статус отчёта обновлен на \"Отклонен\". Свяжитесь с хозяином животного.").replyMarkup(replyKeyboardMarkup);
+        }
+    }
+
+    /**
+     * Метод сбрасывает данные о том, в каком меню нахоидтся пользователь. Выполняется при запуске приложения
+     */
+    public void resetUserData() {
+        for (UserStatus user : userService.getAllUsers()) {
+            user.setLastMenuLevel(0);
+            user.setIsSendingReport(false);
+            user.setShelterId(0);
+            user.setLastInfoId(0);
+        }
+    }
 }

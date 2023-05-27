@@ -42,6 +42,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     @PostConstruct
     public void init() {
         telegramBot.setUpdatesListener(this);
+        telegramKeyboard.resetUserData();
     }
 
     @Override
