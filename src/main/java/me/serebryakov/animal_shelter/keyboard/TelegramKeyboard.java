@@ -445,4 +445,16 @@ public class TelegramKeyboard {
             return new SendMessage(chatId, "Спасибо за проверку. Статус отчёта обновлен на \"Отклонен\". Свяжитесь с хозяином животного.").replyMarkup(replyKeyboardMarkup);
         }
     }
+
+    /**
+     * Метод сбрасывает данные о том, в каком меню нахоидтся пользователь. Выполняется при запуске приложения
+     */
+    public void resetUserData() {
+        for (UserStatus user : userService.getAllUsers()) {
+            user.setLastMenuLevel(0);
+            user.setIsSendingReport(false);
+            user.setShelterId(0);
+            user.setLastInfoId(0);
+        }
+    }
 }
