@@ -1,23 +1,24 @@
 package me.serebryakov.animal_shelter.keyboard;
 
+import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Contact;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.PhotoSize;
 import com.pengrad.telegrambot.model.request.KeyboardButton;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
+import com.pengrad.telegrambot.request.GetFile;
 import com.pengrad.telegrambot.request.SendMessage;
-import me.serebryakov.animal_shelter.entity.Animal;
-import me.serebryakov.animal_shelter.entity.AnimalType;
-import me.serebryakov.animal_shelter.entity.Report;
-import me.serebryakov.animal_shelter.service.AnimalService;
-import me.serebryakov.animal_shelter.service.OwnerService;
-import me.serebryakov.animal_shelter.service.ReportService;
-import me.serebryakov.animal_shelter.service.UserService;
+import com.pengrad.telegrambot.request.SendPhoto;
+import com.pengrad.telegrambot.response.GetFileResponse;
+import me.serebryakov.animal_shelter.entity.*;
+import me.serebryakov.animal_shelter.entity.menu.ReportStatus;
+import me.serebryakov.animal_shelter.service.*;
 import me.serebryakov.animal_shelter.service.menuService.InfoService;
 import me.serebryakov.animal_shelter.service.menuService.MainMenuService;
 import me.serebryakov.animal_shelter.service.menuService.SecondMenuService;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -330,6 +331,7 @@ public class TelegramKeyboard {
         if (message.photo() != null) {
 
             PhotoSize photoSize = message.photo()[message.photo().length - 1];
+            //Сохраняем только fileId, чтобы не хранить фотографии локально. Они храняться на серверах телеграма.
             String fileId = photoSize.fileId();
 
             //проверяем есть ли уже фото
