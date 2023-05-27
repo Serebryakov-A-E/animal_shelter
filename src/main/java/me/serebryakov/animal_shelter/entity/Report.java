@@ -3,7 +3,6 @@ package me.serebryakov.animal_shelter.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import me.serebryakov.animal_shelter.entity.menu.ReportStatus;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -12,22 +11,18 @@ import java.time.LocalTime;
 @Data
 @NoArgsConstructor
 @Table(name = "reports")
-//@IdClass(ReportId.class)
+@IdClass(ReportId.class)
 public class Report {
-    @Id
-    @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
 
-    //@Id
+    @Id
     @Column(name = "chat_id")
     private long chatId;
 
-    //@Id
+    @Id
     @Column(name = "date")
     private LocalDate date;
 
-    //@Id
+    @Id
     @Column(name = "shelter_id")
     private int shelterId;
 
@@ -39,8 +34,4 @@ public class Report {
 
     @Column(name = "file_id")
     private String fileId;
-
-    @Enumerated
-    @Column(name = "status")
-    private ReportStatus reportStatus = ReportStatus.UNCHECKED;
 }

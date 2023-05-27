@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDate;
-/*
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,6 +15,3 @@ public class ReportId implements Serializable {
     private LocalDate date;
     private int shelterId;
 }
-
-
- */
