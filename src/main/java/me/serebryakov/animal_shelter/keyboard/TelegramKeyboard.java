@@ -63,6 +63,10 @@ public class TelegramKeyboard {
 
         //если пользователь находится в состоянии отправки репорта
         if (userService.getUserByChatId(chatId).getIsSendingReport()) {
+            if ("<- Назад".equals(text)) {
+                userService.updateReportStatus(chatId, false);
+                return new SendMessage(chatId, "Отправка отчёта отменена.");
+            }
             int shelterId = userService.getUserByChatId(chatId).getShelterId();
             Report report = reportService.findByChatIdAndDateAndShelterId(chatId, LocalDate.now(), shelterId);
 
@@ -124,6 +128,14 @@ public class TelegramKeyboard {
             //получаем ид приюта
             shelterId = userService.getUserByChatId(chatId).getShelterId();
 
+            //проверяем есть ли в базе контактные данные пользователя
+            if (ownerService.getByChatId(chatId).getPhoneNumber().isEmpty()) {
+                userService.updateReportStatus(chatId, false);
+                //кнопка контактных данных
+                KeyboardButton keyboardButton = new KeyboardButton("Оставить контактные данные").requestContact(true);
+                replyKeyboardMarkup.addRow(keyboardButton);
+                return new SendMessage(chatId, "Чтобы отправлять отчёт поделитесь контактными данными.").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
+            }
             //проверяем есть ли у пользователя какое-либо животное
             List<Animal> animals;
             if (shelterId == 1) {
@@ -134,7 +146,7 @@ public class TelegramKeyboard {
                 return new SendMessage(chatId, "ERROR");
             }
             if (animals.size() == 0) {
-                return new SendMessage(chatId, "У вас нет животных.").replyMarkup(replyKeyboardMarkup);
+                return new SendMessage(chatId, "У вас нет животных.").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
             }
 
             //проверяем создан ли отчёт
@@ -145,7 +157,7 @@ public class TelegramKeyboard {
                     //возвращает ответ, что отчёт сегодня уже был отправлен и его проверяет волонтер
                     //также выводим пользователя из состояния отправки отчёта
                     userService.updateReportStatus(chatId, false);
-                    return new SendMessage(chatId, "Вы уже отправляли отчёт сегодня.").replyMarkup(replyKeyboardMarkup);
+                    return new SendMessage(chatId, "Вы уже отправляли отчёт сегодня.").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
                 }
             }
             userService.updateReportStatus(chatId, true);
@@ -323,7 +335,7 @@ public class TelegramKeyboard {
                 if (report.getFileId() != null) {
                     userService.updateReportStatus(chatId, false);
                     //todo реализовать отправку сообщения волонтеру
-                    return new SendMessage(chatId, "Ваш отчёт принят и отправлен на проверку волонтеру!").replyMarkup(replyKeyboardMarkup);
+                    return new SendMessage(chatId, "Ваш отчёт принят и отправлен на проверку волонтеру!").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
                 }
                 return new SendMessage(chatId, "Сообщение отчёта принято. Ожидаем фото отчёта.");
             }
@@ -344,7 +356,7 @@ public class TelegramKeyboard {
                 reportService.save(report);
                 if (report.getText() != null) {
                     userService.updateReportStatus(chatId, false);
-                    return new SendMessage(chatId, "Ваш отчёт принят и отправлен на проверку волонтеру!").replyMarkup(replyKeyboardMarkup);
+                    return new SendMessage(chatId, "Ваш отчёт принят и отправлен на проверку волонтеру!").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
                 }
                 return new SendMessage(chatId, "Фото отчёта принято. Ожидаем текст отчёта.");
             }
@@ -381,7 +393,7 @@ public class TelegramKeyboard {
 
         SendPhoto sendPhoto = new SendPhoto(chatId, image);
         sendPhoto.caption(reportText + "\n" + "Контакты для связи с хозяином животного:" + "\n" + owner.getName() + "\n" + owner.getPhoneNumber());
-        sendPhoto.replyMarkup(replyKeyboardMarkup);
+        sendPhoto.replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
 
         return sendPhoto;
     }
@@ -409,7 +421,7 @@ public class TelegramKeyboard {
             sb.append("\n");
             sb.append("\n");
         }
-        return new SendMessage(chatId, sb.toString()).replyMarkup(new ReplyKeyboardMarkup("Главное меню"));
+        return new SendMessage(chatId, sb.toString()).replyMarkup(new ReplyKeyboardMarkup("Главное меню").resizeKeyboard(true));
     }
 
     private byte[] getFile(String fileId, TelegramBot telegramBot) {
@@ -432,17 +444,17 @@ public class TelegramKeyboard {
 
         //выкидываем, если вдруг такого отчёта нет
         if (report == null) {
-            return new SendMessage(chatId, "Ошибка установки статуса отчёта. Отчёта с таким Id нет.").replyMarkup(replyKeyboardMarkup);
+            return new SendMessage(chatId, "Ошибка установки статуса отчёта. Отчёта с таким Id нет.").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
         }
 
         if (status.equals("Одобрить")) {
             report.setReportStatus(ReportStatus.APPROVED);
             reportService.save(report);
-            return new SendMessage(chatId, "Спасибо за проверку. Статус отчёта обновлен на \"Одобрен\"").replyMarkup(replyKeyboardMarkup);
+            return new SendMessage(chatId, "Спасибо за проверку. Статус отчёта обновлен на \"Одобрен\"").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
         } else {
             report.setReportStatus(ReportStatus.REJECTED);
             reportService.save(report);
-            return new SendMessage(chatId, "Спасибо за проверку. Статус отчёта обновлен на \"Отклонен\". Свяжитесь с хозяином животного.").replyMarkup(replyKeyboardMarkup);
+            return new SendMessage(chatId, "Спасибо за проверку. Статус отчёта обновлен на \"Отклонен\". Свяжитесь с хозяином животного.").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
         }
     }
 
@@ -455,6 +467,7 @@ public class TelegramKeyboard {
             user.setIsSendingReport(false);
             user.setShelterId(0);
             user.setLastInfoId(0);
+            userService.save(user);
         }
     }
 }

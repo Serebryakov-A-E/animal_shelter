@@ -21,6 +21,11 @@ public class UserService {
         repository.save(user);
     }
 
+    public void save(UserStatus user) {
+        repository.save(user);
+    }
+
+
     public UserStatus getUserByChatId(long chatId) {
         return repository.findByChatId(chatId);
     }

@@ -63,7 +63,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                         } else if ("Получить отчёт на проверку".equals(text)) {
                             sendPhoto = telegramKeyboard.getUncheckedReports(chatId, telegramBot, volunteerService);
                             if (sendPhoto == null) {
-                                sendMessage = new SendMessage(chatId, "Сегодня ещё не было отчётов").replyMarkup(new ReplyKeyboardMarkup("Главное меню"));
+                                sendMessage = new SendMessage(chatId, "Сегодня ещё не было отчётов").replyMarkup(new ReplyKeyboardMarkup("Главное меню").resizeKeyboard(true));
                             }
                         } else if ("Список отклоненных отчётов".equals(text)) {
                             sendMessage = getReportsList(chatId, ReportStatus.REJECTED);
@@ -106,7 +106,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private SendMessage getReportsList(long chatId, ReportStatus status) {
         SendMessage sendMessage = telegramKeyboard.getReportList(chatId, status);
         if (sendMessage == null) {
-            sendMessage = new SendMessage(chatId, "Отчётов нет.").replyMarkup(new ReplyKeyboardMarkup("Главное меню"));
+            sendMessage = new SendMessage(chatId, "Отчётов нет.").replyMarkup(new ReplyKeyboardMarkup("Главное меню").resizeKeyboard(true));
         }
         return sendMessage;
     }
@@ -114,6 +114,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private SendMessage getVolunteerMenu(long chatId) {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup("Получить отчёт на проверку", "Список отклоненных отчётов",
                 "Список одобреных отчётов", "Список непроверенных отчётов");
-        return new SendMessage(chatId, "Выберите нужный пункт меню.").replyMarkup(replyKeyboardMarkup);
+        return new SendMessage(chatId, "Выберите нужный пункт меню.").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
     }
 }
