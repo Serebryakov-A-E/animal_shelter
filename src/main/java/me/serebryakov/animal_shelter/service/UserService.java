@@ -4,6 +4,8 @@ import me.serebryakov.animal_shelter.entity.UserStatus;
 import me.serebryakov.animal_shelter.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserService {
     private final UserRepository repository;
@@ -18,6 +20,11 @@ public class UserService {
         user.setChatId(chatId);
         repository.save(user);
     }
+
+    public void save(UserStatus user) {
+        repository.save(user);
+    }
+
 
     public UserStatus getUserByChatId(long chatId) {
         return repository.findByChatId(chatId);
@@ -45,5 +52,9 @@ public class UserService {
         UserStatus user = repository.findByChatId(chatId);
         user.setLastInfoId(lastInfoId);
         repository.save(user);
+    }
+
+    public List<UserStatus> getAllUsers() {
+        return repository.findAll();
     }
 }

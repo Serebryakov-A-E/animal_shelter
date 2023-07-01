@@ -25,10 +25,10 @@ public class Owner {
     private long chatId;
 
     @Column(name = "name")
-    private String name;
+    private String name = "";
 
     @Column(name = "phone")
-    private String phoneNumber;
+    private String phoneNumber = "";
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "owner", fetch = FetchType.EAGER)
     private List<Animal> animalList = new ArrayList<>();
