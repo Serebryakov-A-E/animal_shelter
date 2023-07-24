@@ -12,10 +12,10 @@ import com.pengrad.telegrambot.request.SendPhoto;
 import com.pengrad.telegrambot.response.GetFileResponse;
 import me.serebryakov.animal_shelter.entity.*;
 import me.serebryakov.animal_shelter.entity.menu.ReportStatus;
-import me.serebryakov.animal_shelter.service.*;
-import me.serebryakov.animal_shelter.service.menuService.InfoService;
-import me.serebryakov.animal_shelter.service.menuService.MainMenuService;
-import me.serebryakov.animal_shelter.service.menuService.SecondMenuService;
+import me.serebryakov.animal_shelter.service.impl.*;
+import me.serebryakov.animal_shelter.service.menuService.impl.InfoServiceImpl;
+import me.serebryakov.animal_shelter.service.menuService.impl.MainMenuServiceImpl;
+import me.serebryakov.animal_shelter.service.menuService.impl.SecondMenuServiceImpl;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -25,22 +25,22 @@ import java.util.List;
 
 @Service
 public class TelegramKeyboard {
-    private final MainMenuService mainMenuService;
-    private final SecondMenuService secondMenuService;
-    private final InfoService infoService;
-    private final UserService userService;
-    private final OwnerService ownerService;
-    private final AnimalService animalService;
-    private final ReportService reportService;
+    private final MainMenuServiceImpl mainMenuServiceImpl;
+    private final SecondMenuServiceImpl secondMenuServiceImpl;
+    private final InfoServiceImpl infoServiceImpl;
+    private final UserServiceImpl userServiceImpl;
+    private final OwnerServiceImpl ownerServiceImpl;
+    private final AnimalServiceImpl animalServiceImpl;
+    private final ReportServiceImpl reportServiceImpl;
 
-    public TelegramKeyboard(MainMenuService mainMenuService, SecondMenuService secondMenuService, InfoService infoService, UserService userService, OwnerService ownerService, AnimalService animalService, ReportService reportService) {
-        this.mainMenuService = mainMenuService;
-        this.secondMenuService = secondMenuService;
-        this.infoService = infoService;
-        this.userService = userService;
-        this.ownerService = ownerService;
-        this.animalService = animalService;
-        this.reportService = reportService;
+    public TelegramKeyboard(MainMenuServiceImpl mainMenuServiceImpl, SecondMenuServiceImpl secondMenuServiceImpl, InfoServiceImpl infoServiceImpl, UserServiceImpl userServiceImpl, OwnerServiceImpl ownerServiceImpl, AnimalServiceImpl animalServiceImpl, ReportServiceImpl reportServiceImpl) {
+        this.mainMenuServiceImpl = mainMenuServiceImpl;
+        this.secondMenuServiceImpl = secondMenuServiceImpl;
+        this.infoServiceImpl = infoServiceImpl;
+        this.userServiceImpl = userServiceImpl;
+        this.ownerServiceImpl = ownerServiceImpl;
+        this.animalServiceImpl = animalServiceImpl;
+        this.reportServiceImpl = reportServiceImpl;
     }
 
     public SendMessage getResponse(Message message) {
@@ -49,26 +49,25 @@ public class TelegramKeyboard {
         Contact contact = message.contact();
 
         //код создания пользователя, если такого ещё нет
-        if (userService.getUserByChatId(chatId) == null) {
-            userService.create(chatId);
-            userService.updateMenuLevel(chatId, 0);
+        if (userServiceImpl.getUserByChatId(chatId) == null) {
+            userServiceImpl.create(chatId);
+            userServiceImpl.updateMenuLevel(chatId, 0);
             //если пользователь сдесь первый раз, то выкидываем метод с особым приветствием!
             return getZeroLevelMenu(chatId, true);
         }
         //Также вносим в базу овнера если его ещё нет
-        if (ownerService.getByChatId(chatId) == null) {
-            ownerService.create(chatId);
+        if (ownerServiceImpl.getByChatId(chatId) == null) {
+            ownerServiceImpl.create(chatId);
         }
 
-
         //если пользователь находится в состоянии отправки репорта
-        if (userService.getUserByChatId(chatId).getIsSendingReport()) {
+        if (userServiceImpl.getUserByChatId(chatId).getIsSendingReport()) {
             if ("<- Назад".equals(text)) {
-                userService.updateReportStatus(chatId, false);
+                userServiceImpl.updateReportStatus(chatId, false);
                 return new SendMessage(chatId, "Отправка отчёта отменена.");
             }
-            int shelterId = userService.getUserByChatId(chatId).getShelterId();
-            Report report = reportService.findByChatIdAndDateAndShelterId(chatId, LocalDate.now(), shelterId);
+            int shelterId = userServiceImpl.getUserByChatId(chatId).getShelterId();
+            Report report = reportServiceImpl.findByChatIdAndDateAndShelterId(chatId, LocalDate.now(), shelterId);
 
             if (report == null) {
                 report = new Report();
@@ -76,7 +75,7 @@ public class TelegramKeyboard {
                 report.setDate(LocalDate.now());
                 report.setTime(LocalTime.now());
                 report.setShelterId(shelterId);
-                reportService.save(report);
+                reportServiceImpl.save(report);
             }
             return updateReportInfo(message, shelterId);
         }
@@ -85,7 +84,7 @@ public class TelegramKeyboard {
             return getZeroLevelMenu(chatId, false);
         }
         if (("/start").equals(text)) {
-            userService.updateMenuLevel(chatId, 0);
+            userServiceImpl.updateMenuLevel(chatId, 0);
         }
         //если пришло пустое сообщение, проверям пришли ли контакты пользователя
         if (message.text() == null && message.contact() != null) {
@@ -95,28 +94,28 @@ public class TelegramKeyboard {
         //создаем переменную для id приюта
         Integer shelterId;
         //получаем последний левел меню
-        Integer lastMenuLevel = userService.getUserByChatId(chatId).getLastMenuLevel();
+        Integer lastMenuLevel = userServiceImpl.getUserByChatId(chatId).getLastMenuLevel();
 
         if (text.equals("<- Назад")) {
-            lastMenuLevel = userService.getUserByChatId(chatId).getLastMenuLevel() - 1;
+            lastMenuLevel = userServiceImpl.getUserByChatId(chatId).getLastMenuLevel() - 1;
             switch (lastMenuLevel) {
                 case 1:
                     return getZeroLevelMenu(chatId, false);
                 case 2:
-                    shelterId = userService.getUserByChatId(chatId).getShelterId();
+                    shelterId = userServiceImpl.getUserByChatId(chatId).getShelterId();
                     ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(getSecondMenu(shelterId));
                     //апаем уровень меню
-                    userService.updateMenuLevel(chatId, 2);
+                    userServiceImpl.updateMenuLevel(chatId, 2);
                     //отправляем сообщение и выходим из метода
                     return new SendMessage(chatId, "Что тебя интересует?").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
                 case 3:
                     //получаем id выбранной информации и id выбранного приюта из бд
-                    shelterId = userService.getUserByChatId(chatId).getShelterId();
-                    int infoId = userService.getUserByChatId(chatId).getLastInfoId();
+                    shelterId = userServiceImpl.getUserByChatId(chatId).getShelterId();
+                    int infoId = userServiceImpl.getUserByChatId(chatId).getLastInfoId();
                     //Вызываем меню из меню информации
                     replyKeyboardMarkup = new ReplyKeyboardMarkup(getInfoMenu(shelterId, infoId));
                     //апаем уровень меню
-                    userService.updateMenuLevel(chatId, 3);
+                    userServiceImpl.updateMenuLevel(chatId, 3);
                     //отправляем менюшку и выходим из метода
                     return new SendMessage(chatId, "Выбери нужный раздел информации.").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
                 default:
@@ -126,11 +125,11 @@ public class TelegramKeyboard {
             //создаем кнопку главного меню
             ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup("Главное меню");
             //получаем ид приюта
-            shelterId = userService.getUserByChatId(chatId).getShelterId();
+            shelterId = userServiceImpl.getUserByChatId(chatId).getShelterId();
 
             //проверяем есть ли в базе контактные данные пользователя
-            if (ownerService.getByChatId(chatId).getPhoneNumber().isEmpty()) {
-                userService.updateReportStatus(chatId, false);
+            if (ownerServiceImpl.getByChatId(chatId).getPhoneNumber().isEmpty()) {
+                userServiceImpl.updateReportStatus(chatId, false);
                 //кнопка контактных данных
                 KeyboardButton keyboardButton = new KeyboardButton("Оставить контактные данные").requestContact(true);
                 replyKeyboardMarkup.addRow(keyboardButton);
@@ -139,9 +138,9 @@ public class TelegramKeyboard {
             //проверяем есть ли у пользователя какое-либо животное
             List<Animal> animals;
             if (shelterId == 1) {
-                animals = animalService.findAnimalsByOwnerAndAnimalType(ownerService.getByChatId(chatId), AnimalType.CAT);
+                animals = animalServiceImpl.findAnimalsByOwnerAndAnimalType(ownerServiceImpl.getByChatId(chatId), AnimalType.CAT);
             } else if (shelterId == 2) {
-                animals = animalService.findAnimalsByOwnerAndAnimalType(ownerService.getByChatId(chatId), AnimalType.DOG);
+                animals = animalServiceImpl.findAnimalsByOwnerAndAnimalType(ownerServiceImpl.getByChatId(chatId), AnimalType.DOG);
             } else {
                 return new SendMessage(chatId, "ERROR");
             }
@@ -150,17 +149,17 @@ public class TelegramKeyboard {
             }
 
             //проверяем создан ли отчёт
-            Report report = reportService.findByChatIdAndDateAndShelterId(chatId, LocalDate.now(), shelterId);
+            Report report = reportServiceImpl.findByChatIdAndDateAndShelterId(chatId, LocalDate.now(), shelterId);
             if (report != null) {
                 //проверяем есть ли фото и текст
                 if (report.getFileId() != null && report.getText() != null) {
                     //возвращает ответ, что отчёт сегодня уже был отправлен и его проверяет волонтер
                     //также выводим пользователя из состояния отправки отчёта
-                    userService.updateReportStatus(chatId, false);
+                    userServiceImpl.updateReportStatus(chatId, false);
                     return new SendMessage(chatId, "Вы уже отправляли отчёт сегодня.").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
                 }
             }
-            userService.updateReportStatus(chatId, true);
+            userServiceImpl.updateReportStatus(chatId, true);
             return new SendMessage(chatId, """
                     Следующим сообщением отправьте отчёт по форме:
 
@@ -186,14 +185,13 @@ public class TelegramKeyboard {
 
     /**
      * Метод возвращает сообщение с меню из бд, для главного меню, где предлагается выбрать один из приютов.
-     *
      * @param chatId
      * @return
      */
     private SendMessage getZeroLevelMenu(long chatId, boolean isFirstTime) {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(getMainMenu());
         //сохраняем уровень меню
-        userService.updateMenuLevel(chatId, 1);
+        userServiceImpl.updateMenuLevel(chatId, 1);
         //выходим из метода, отправляем сообщение
         if (isFirstTime) {
             return new SendMessage(chatId, "Привет, похоже, что ты первый раз здесь. Выбери приют который тебя интересует!")
@@ -212,8 +210,8 @@ public class TelegramKeyboard {
      */
     private SendMessage getFirstLevelMenu(long chatId, String text) {
         //получаем Id приюта по тексту сообщения и обновляем его в бд юзера
-        int shelterId = mainMenuService.getMenuIdByItem(text);
-        userService.updateShelterId(chatId, shelterId);
+        int shelterId = mainMenuServiceImpl.getMenuIdByItem(text);
+        userServiceImpl.updateShelterId(chatId, shelterId);
         //Предлагаем выбрать пункт из меню второго уровня
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(getSecondMenu(shelterId));
         //сохраняем уровнь меню
@@ -222,7 +220,7 @@ public class TelegramKeyboard {
         KeyboardButton keyboardButton = new KeyboardButton("Оставить контактные данные").requestContact(true);
         replyKeyboardMarkup.addRow(keyboardButton);
 
-        userService.updateMenuLevel(chatId, 2);
+        userServiceImpl.updateMenuLevel(chatId, 2);
         //отправляем сообщение и выходим из метода
         return new SendMessage(chatId, "Что тебя интересует?").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
     }
@@ -236,14 +234,14 @@ public class TelegramKeyboard {
      */
     private SendMessage getSecondLevelMenu(long chatId, String text) {
         //получаем id выбранной информации и id выбранного приюта из бд
-        int shelterId = userService.getUserByChatId(chatId).getShelterId();
-        int infoId = secondMenuService.getMenuIdByItem(text);
+        int shelterId = userServiceImpl.getUserByChatId(chatId).getShelterId();
+        int infoId = secondMenuServiceImpl.getMenuIdByItem(text);
         //добавляем юзеру послений выбраный ид информации, для работы функции назад
-        userService.updateLastInfoId(chatId, infoId);
+        userServiceImpl.updateLastInfoId(chatId, infoId);
         //Вызываем меню из меню информации
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(getInfoMenu(shelterId, infoId));
         //обновляем уровень меню
-        userService.updateMenuLevel(chatId, 3);
+        userServiceImpl.updateMenuLevel(chatId, 3);
 
         //отправляем менюшку и выходим из метода
         return new SendMessage(chatId, "Выбери нужный раздел информации.").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
@@ -259,81 +257,85 @@ public class TelegramKeyboard {
     private SendMessage getThirdLevelMenu(long chatId, String text) {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup("<- Назад");
         //получаем корректный shelter id
-        int shelterId = userService.getUserByChatId(chatId).getShelterId();
+        int shelterId = userServiceImpl.getUserByChatId(chatId).getShelterId();
         //отправляем на шаг назад
-        userService.updateMenuLevel(chatId, 3);
+        userServiceImpl.updateMenuLevel(chatId, 3);
         return new SendMessage(chatId, getInfo(text, shelterId)).replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
     }
 
+    /**
+     * Метод сохраняет контакты пользователя в бд
+     * @param chatId чатИд пользователя
+     * @param contact объект содержащий его контакты
+     * @return возвращает сообщение о том, что контакты сохранены
+     */
     private SendMessage saveContacts(long chatId, Contact contact) {
-        ownerService.saveContacts(chatId, contact);
+        ownerServiceImpl.saveContacts(chatId, contact);
         return new SendMessage(chatId, "Контактные данные успешно сохранены!");
     }
 
 
     /**
-     * Метод возвращает массив строк, содержащий пункты главного меню. Выбор приюта.
-     *
-     * @return
+     * @return Метод возвращает массив строк, содержащий пункты главного меню. Выбор приюта.
      */
     private String[] getMainMenu() {
-        List<String> list = mainMenuService.getMenuItems();
+        List<String> list = mainMenuServiceImpl.getMenuItems();
         return list.toArray(String[]::new);
     }
 
     /**
-     * Метод возвращает массив строк, содержащий пункты подменю.
-     *
-     * @return
+     * @return Метод возвращает массив строк, содержащий пункты подменю.
      */
     private String[] getSecondMenu(int shelterId) {
-        List<String> list = secondMenuService.getMenuItemsByShelterId(shelterId);
+        List<String> list = secondMenuServiceImpl.getMenuItemsByShelterId(shelterId);
         list.add("Отправить отчёт");
         list.add("<- Назад");
         return list.toArray(String[]::new);
     }
 
     /**
-     * Метод возвращает меню в котором пользователь может выбрать интересующую его информацию.
-     *
-     * @param shelterId
-     * @param infoId
-     * @return
+     * @param shelterId ид приюта
+     * @param infoId ид конкретной информации
+     * @return Метод возвращает меню в котором пользователь может выбрать интересующую его информацию.
      */
     private String[] getInfoMenu(int shelterId, int infoId) {
-        List<String> list = infoService.getMenuItems(shelterId, infoId);
+        List<String> list = infoServiceImpl.getMenuItems(shelterId, infoId);
         list.add("<- Назад");
         return list.toArray(String[]::new);
     }
 
     /**
-     * Метод возвращает строку с информацией, выбранной пользователем.
-     *
-     * @param item
-     * @param shelterId
-     * @return
+     * @param item вовзращает тест из класса Info по item
+     * @param shelterId ид приюта
+     * @return Метод возвращает строку с информацией, выбранной пользователем.
      */
     private String getInfo(String item, int shelterId) {
-        return infoService.getInfo(item, shelterId);
+        return infoServiceImpl.getInfo(item, shelterId);
     }
 
+    /**
+     * Метод принимает и обновляет информацию в отчёте
+     * @param message новое сообщение для отчёта
+     * @param shelterId id приюта
+     * @return сообщение с состоянием отчёта
+     */
     private SendMessage updateReportInfo(Message message, int shelterId) {
 
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup("Главное меню");
 
         long chatId = message.chat().id();
-        Report report = reportService.findByChatIdAndDateAndShelterId(chatId, LocalDate.now(), shelterId);
+        Report report = reportServiceImpl.findByChatIdAndDateAndShelterId(chatId, LocalDate.now(), shelterId);
         if (message.text() != null) {
             //проверяем есть ли уже текст
             if (report.getText() != null) {
                 report.setText(message.text());
-                reportService.save(report);
+                reportServiceImpl.save(report);
                 return new SendMessage(chatId, "Сообщение отчёта обновлено.");
             } else {
                 report.setText(message.text());
-                reportService.save(report);
+                reportServiceImpl.save(report);
                 if (report.getFileId() != null) {
-                    userService.updateReportStatus(chatId, false);
+                    userServiceImpl.updateReportStatus(chatId, false);
                     //todo реализовать отправку сообщения волонтеру
                     return new SendMessage(chatId, "Ваш отчёт принят и отправлен на проверку волонтеру!").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
                 }
@@ -341,7 +343,6 @@ public class TelegramKeyboard {
             }
         }
         if (message.photo() != null) {
-
             PhotoSize photoSize = message.photo()[message.photo().length - 1];
             //Сохраняем только fileId, чтобы не хранить фотографии локально. Они храняться на серверах телеграма.
             String fileId = photoSize.fileId();
@@ -349,26 +350,34 @@ public class TelegramKeyboard {
             //проверяем есть ли уже фото
             if (report.getFileId() != null) {
                 report.setFileId(fileId);
-                reportService.save(report);
+                reportServiceImpl.save(report);
                 return new SendMessage(chatId, "Фото отчёта обновлено.");
             } else {
                 report.setFileId(fileId);
-                reportService.save(report);
+                reportServiceImpl.save(report);
                 if (report.getText() != null) {
-                    userService.updateReportStatus(chatId, false);
+                    userServiceImpl.updateReportStatus(chatId, false);
                     return new SendMessage(chatId, "Ваш отчёт принят и отправлен на проверку волонтеру!").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
                 }
                 return new SendMessage(chatId, "Фото отчёта принято. Ожидаем текст отчёта.");
             }
         }
-        userService.updateReportStatus(chatId, false);
+        userServiceImpl.updateReportStatus(chatId, false);
         return new SendMessage(chatId, "ERROR");
     }
 
-    //метод синхронизирован, чтобы два волонтера не могли получить на проверку одинаковый отчёт
-    public synchronized SendPhoto getUncheckedReports(long chatId, TelegramBot telegramBot, VolunteerService volunteerService) {
+    /**
+     * Метод возвращает отчёт с описанием и фото, а также две кнопки для волонтера "Одобрить" и "Отклонить"
+     * Метод синхронизирован, чтобы два волонтера не могли получить на проверку одинаковый отчёт
+     * @param chatId chat id Волонтера
+     * @param telegramBot
+     * @param volunteerServiceImpl
+     * @return Метод возвращает SendPhoto с описанием.
+     */
+
+    public synchronized SendPhoto getUncheckedReport(long chatId, TelegramBot telegramBot, VolunteerServiceImpl volunteerServiceImpl) {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup("Одобрить", "Отклонить");
-        List<Report> reports = reportService.findReportsByDateAndStatus(LocalDate.now(), ReportStatus.UNCHECKED);
+        List<Report> reports = reportServiceImpl.findReportsByDateAndStatus(LocalDate.now(), ReportStatus.UNCHECKED);
         if (reports.size() == 0) {
             return null;
         }
@@ -378,16 +387,16 @@ public class TelegramKeyboard {
         long reportId = report.getId();
 
         //устанавливаем волонтеру ид проверяемого отчёта
-        Volunteer volunteer = volunteerService.getByChatId(chatId);
+        Volunteer volunteer = volunteerServiceImpl.getByChatId(chatId);
         volunteer.setReportId(reportId);
-        volunteerService.save(volunteer);
+        volunteerServiceImpl.save(volunteer);
 
         //устанавливаем статус "на проверке"
         report.setReportStatus(ReportStatus.CHECKING);
-        reportService.save(report);
+        reportServiceImpl.save(report);
 
         long ownerChatId = report.getChatId();
-        Owner owner = ownerService.getByChatId(ownerChatId);
+        Owner owner = ownerServiceImpl.getByChatId(ownerChatId);
         //получаем байты фотки
         byte[] image = getFile(fileId, telegramBot);
 
@@ -398,15 +407,21 @@ public class TelegramKeyboard {
         return sendPhoto;
     }
 
+    /**
+     * Метод возвращает сообщение со списком всех репортов определённого статуса
+     * @param chatId chat id юзера
+     * @param status статус репортов, которые нужно вернуть
+     * @return возвращает сообщение со списком всех репортов определённого статуса
+     */
     public SendMessage getReportList(long chatId, ReportStatus status) {
         StringBuilder sb = new StringBuilder();
-        List<Report> reports = reportService.getReportsListByStatus(status);
+        List<Report> reports = reportServiceImpl.getReportsListByStatus(status);
         if (reports.size() == 0) {
             return null;
         }
 
         for (Report report : reports) {
-            Owner owner = ownerService.getByChatId(report.getChatId());
+            Owner owner = ownerServiceImpl.getByChatId(report.getChatId());
             sb.append("id отчёта - ").append(report.getId()).append("\nДата отчёта: ").append(report.getDate()).append("\nТекст отчёта: ").append(report.getText());
             String shelterInfo;
             if (report.getShelterId() == 1) {
@@ -424,6 +439,12 @@ public class TelegramKeyboard {
         return new SendMessage(chatId, sb.toString()).replyMarkup(new ReplyKeyboardMarkup("Главное меню").resizeKeyboard(true));
     }
 
+    /**
+     * Метод для получения байтов изображения от телеграма
+     * @param fileId id изображения
+     * @param telegramBot
+     * @return байты изображения
+     */
     private byte[] getFile(String fileId, TelegramBot telegramBot) {
         GetFileResponse getFileResponse = telegramBot.execute(new GetFile(fileId));
         if (getFileResponse.isOk()) {
@@ -436,11 +457,17 @@ public class TelegramKeyboard {
         return new byte[0];
     }
 
-    //todo поменять. на просто менять статус по репорт ид
+    /**
+     * Метод устанавливает новый статус для отчёта после проверки
+     * @param chatId id волонтера
+     * @param status новый статус
+     * @param reportId ид отчёта
+     * @return Сообщение о новом статусе отчёта или сообщение об ошибке.
+     */
     public SendMessage setReportStatus(long chatId, String status, long reportId) {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup("Главное меню");
 
-        Report report = reportService.getById(reportId);
+        Report report = reportServiceImpl.getById(reportId);
 
         //выкидываем, если вдруг такого отчёта нет
         if (report == null) {
@@ -449,11 +476,11 @@ public class TelegramKeyboard {
 
         if (status.equals("Одобрить")) {
             report.setReportStatus(ReportStatus.APPROVED);
-            reportService.save(report);
+            reportServiceImpl.save(report);
             return new SendMessage(chatId, "Спасибо за проверку. Статус отчёта обновлен на \"Одобрен\"").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
         } else {
             report.setReportStatus(ReportStatus.REJECTED);
-            reportService.save(report);
+            reportServiceImpl.save(report);
             return new SendMessage(chatId, "Спасибо за проверку. Статус отчёта обновлен на \"Отклонен\". Свяжитесь с хозяином животного.").replyMarkup(replyKeyboardMarkup.resizeKeyboard(true));
         }
     }
@@ -462,12 +489,12 @@ public class TelegramKeyboard {
      * Метод сбрасывает данные о том, в каком меню нахоидтся пользователь. Выполняется при запуске приложения
      */
     public void resetUserData() {
-        for (UserStatus user : userService.getAllUsers()) {
+        for (UserStatus user : userServiceImpl.getAllUsers()) {
             user.setLastMenuLevel(0);
             user.setIsSendingReport(false);
             user.setShelterId(0);
             user.setLastInfoId(0);
-            userService.save(user);
+            userServiceImpl.save(user);
         }
     }
 }

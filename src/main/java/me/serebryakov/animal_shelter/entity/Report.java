@@ -8,11 +8,13 @@ import me.serebryakov.animal_shelter.entity.menu.ReportStatus;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+/**
+ * Класс представляющий отчёт о состоянии животного, который отправляет пользователь
+ */
 @Entity
 @Data
 @NoArgsConstructor
 @Table(name = "reports")
-//@IdClass(ReportId.class)
 public class Report {
     @Id
     @Column(name = "id")

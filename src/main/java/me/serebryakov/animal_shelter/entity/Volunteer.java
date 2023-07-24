@@ -7,6 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Класс для волонтеров с их id, также хранит последний проверяемый ид репорта
+ */
 @Entity
 @Data
 @NoArgsConstructor

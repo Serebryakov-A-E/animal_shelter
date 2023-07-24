@@ -3,43 +3,19 @@ package me.serebryakov.animal_shelter.service;
 import me.serebryakov.animal_shelter.entity.Animal;
 import me.serebryakov.animal_shelter.entity.AnimalType;
 import me.serebryakov.animal_shelter.entity.Owner;
-import me.serebryakov.animal_shelter.exception.AnimalNotExistException;
-import me.serebryakov.animal_shelter.repository.AnimalRepository;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
-public class AnimalService {
-    private final AnimalRepository repository;
+public interface AnimalService {
+    void save(Animal animal);
 
-    public AnimalService(AnimalRepository animalRepository) {
-        this.repository = animalRepository;
-    }
+    Animal getById(long id);
 
-    public void save(Animal animal) {
-        repository.save(animal);
-    }
+    void updateOwnerById(long id, Owner owner);
 
-    public Animal getById(long id) {
-        return repository.findById(id).orElseThrow(AnimalNotExistException::new);
-    }
+    List<Animal> getAnimalsByOwner(Owner owner);
 
-    public void updateOwnerById(long id, Owner owner) {
-        Animal animal = repository.findById(id).orElseThrow(AnimalNotExistException::new);
-        animal.setOwner(owner);
-        save(animal);
-    }
+    List<Animal> findAnimalsByOwnerAndAnimalType(Owner owner, AnimalType animalType);
 
-    public List<Animal> getAnimalsByOwner(Owner owner) {
-        return repository.findAnimalsByOwner(owner);
-    }
-
-    public List<Animal> findAnimalsByOwnerAndAnimalType(Owner owner, AnimalType animalType) {
-        return repository.findAnimalsByOwnerAndAnimalType(owner, animalType);
-    }
-
-    public void delete(long id) {
-        repository.deleteById(id);
-    }
+    void delete(long id);
 }

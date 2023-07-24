@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Класс хранит текущее положение пользователя в меню
+ */
 @Entity
 @Data
 @NoArgsConstructor

@@ -6,6 +6,9 @@ import lombok.Data;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Класс хранит пукнты меню второго уровня
+ */
 @Entity
 @Table(name = "second_menu")
 @Data

@@ -3,6 +3,9 @@ package me.serebryakov.animal_shelter.entity.menu;
 import jakarta.persistence.*;
 import lombok.Data;
 
+/**
+ * Класс для меню 3 уровня, также хранит информацию для пользователя
+ */
 @Entity
 @Table(name = "info")
 @Data
